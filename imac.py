@@ -1,5 +1,5 @@
 # operations
-def add(pg, index, str_op):
+def add(pg, index, str_op, inputs, outputs):
     i = index[0]
     if i+5 > len(pg):
         print(f"Will go OOB after add instruction at {i}")
@@ -18,7 +18,7 @@ def add(pg, index, str_op):
         raise ValueError("Can't handle a immediate mode add result")
     index[0] = i + 4
 
-def mul(pg, index, str_op):
+def mul(pg, index, str_op, inputs, outputs):
     i = index[0]
     if i+5 > len(pg):
         print(f"Will go OOB after mul instruction at {i}")
@@ -37,7 +37,7 @@ def mul(pg, index, str_op):
         raise ValueError("Can't handle a immediate mode mul result")
     index[0] = i + 4
 
-def iin(pg, index, str_op):
+def iin(pg, index, str_op, inputs, outputs):
     i = index[0]
     if i+3 > len(pg):
         print(f"Will go OOB after iin instruction at {i}")
@@ -46,11 +46,11 @@ def iin(pg, index, str_op):
         idxr = pg[i+1]
     else:
         raise ValueError("Can't handle a immediate mode iin result")
-    i_in = int(input("Input an integer: "))
+    i_in = int(inputs.pop(0))
     pg[idxr] = i_in
     index[0] = i + 2
 
-def iout(pg, index, str_op):
+def iout(pg, index, str_op, inputs, outputs):
     i = index[0]
     if i+3 > len(pg):
         print(f"Will go OOB after iout instruction at {i}")
@@ -59,10 +59,11 @@ def iout(pg, index, str_op):
         idx1 = pg[pg[i+1]]
     else:
         idx1 = pg[i+1]
-    print(f"{idx1}")
+    #print(f"{idx1}")
+    outputs.append(f"{idx1}")
     index[0] = i + 2
 
-def jit(pg, index, str_op): # jump-if-true
+def jit(pg, index, str_op, inputs, outputs): # jump-if-true
     i = index[0]
     if str_op[2] == "0":
         idx1 = pg[pg[i+1]]
@@ -77,7 +78,7 @@ def jit(pg, index, str_op): # jump-if-true
     else:
         index[0] = i + 3
 
-def jif(pg, index, str_op): # jump-if-false
+def jif(pg, index, str_op, inputs, outputs): # jump-if-false
     i = index[0]
     if str_op[2] == "0":
         idx1 = pg[pg[i+1]]
@@ -92,7 +93,7 @@ def jif(pg, index, str_op): # jump-if-false
     else:
         index[0] = i + 3
 
-def lt(pg, index, str_op): # less than
+def lt(pg, index, str_op, inputs, outputs): # less than
     i = index[0]
     if i+5 > len(pg):
         raise ValueError(f"Will go OOB after {i}, lt op")
@@ -114,7 +115,7 @@ def lt(pg, index, str_op): # less than
         pg[idxr] = 0
     index[0] = i + 4
 
-def eq(pg, index, str_op): # equals
+def eq(pg, index, str_op, inputs, outputs): # equals
     i = index[0]
     if i+5 > len(pg):
         raise ValueError(f"Will go OOB after {i}, lt op")
@@ -149,10 +150,11 @@ OP_CODES = {
 
 STOP = 99
 
-def imac(pg, i, dbg_prints = False):
+def imac(pg, i, inputs, dbg_prints = False):
     running = True
     exn = 0 # number of instructions that have run
-    index = [i,] # cur index that can be modified in functions 
+    index = [i,] # cur index that can be modified in functions
+    outputs = []
     while running:
         if dbg_prints:
             print(f"Running {exn=} Current index: {index[0]}",
@@ -167,5 +169,7 @@ def imac(pg, i, dbg_prints = False):
                   f"at index {index[0]}")
             running = False
         else:
-            OP_CODES[op](pg, index, str_op)
+            OP_CODES[op](pg, index, str_op, inputs, outputs)
             exn += 1
+
+    return(outputs)
