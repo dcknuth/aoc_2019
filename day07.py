@@ -38,7 +38,6 @@ def tests():
 tests()
 
 filename = "input07.txt"
-
 # Read in file. There might be a day or two where this needs to be changed
 with open(filename) as f:
     ls = f.read().strip()
@@ -57,10 +56,4 @@ def part2(ls):
     plist = [int(x) for x in ls[0].split(',')]
     imac(plist, 0)
 
-
-import builtins
-def my_input(prompt=""):
-    return("5")
-
-builtins.input = my_input
 part2(ls)
