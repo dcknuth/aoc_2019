@@ -12,6 +12,7 @@ pub enum State {
 pub struct Imac {
     p: Vec<i64>,
     index: usize,
+    rb_offset: i64,
     in_q: VecDeque<i64>,
     out_q: VecDeque<i64>,
     state: State,
@@ -20,12 +21,14 @@ pub struct Imac {
 impl Imac {
     pub fn new(int_vec: &Vec<i64>, i: usize,
         inputs: Option<VecDeque<i64>>) -> Self {
-        let p = int_vec.clone();
+        let mut p = int_vec.clone();
+        p.resize(10000, 0);
         let index = i;
+        let rb_offset = 0;
         let in_q = inputs.unwrap_or_else(VecDeque::new);
         let out_q = VecDeque::new();
         let state = State::NotStarted;
-        Self { p, index, in_q, out_q, state }
+        Self { p, index, rb_offset, in_q, out_q, state }
     }
     pub fn load_in(&mut self, inputs: &mut VecDeque<i64>) {
         while let Some(i) = inputs.pop_front() {
@@ -50,21 +53,29 @@ impl Imac {
         let arg1: i64;
         let arg2: i64;
         let dest: usize;
-        if str_op.chars().nth(2) == Some('0') {
-            arg1 = self.p[self.p[self.index+1] as usize] as i64;
-        } else {
-            arg1 = self.p[self.index+1];
+        match str_op.chars().nth(2) {
+            Some('0') => arg1 = self.p[self.p[self.index+1] as usize],
+            Some('1') => arg1 = self.p[self.index+1],
+            Some('2') => arg1 =
+                self.p[(self.rb_offset + self.p[self.index+1]) as usize],
+            _ => panic!("Unknown mode in add arg1 at index: {}", self.index)
         }
-        if str_op.chars().nth(1) == Some('0') {
-            arg2 = self.p[self.p[self.index+2] as usize] as i64;
-        } else {
-            arg2 = self.p[self.index+2];
+        match str_op.chars().nth(1) {
+            Some('0') => arg2 = self.p[self.p[self.index+2] as usize],
+            Some('1') => arg2 = self.p[self.index+2],
+            Some('2') => arg2 =
+                self.p[(self.rb_offset + self.p[self.index+2]) as usize],
+            _ => panic!("Unknown mode in add arg2 at index: {}", self.index)
         }
-        if str_op.chars().nth(0) == Some('0') {
-            dest = self.p[self.index+3] as usize;
-        } else {
-            panic!("Write locations can't be immediate mode (add). Index: {}",
+        match str_op.chars().nth(0) {
+            Some('0') => dest = self.p[self.index+3] as usize,
+            Some('1') => {
+                panic!("Write dest can't be immediate mode add index: {}",
                 self.index);
+            },
+            Some('2') => dest =
+                (self.rb_offset + self.p[self.index+3]) as usize,
+            _ => panic!("Unknown mode in add arg3 at index: {}", self.index)
         }
         self.p[dest] = arg1 + arg2;
         self.index += 4;
@@ -73,32 +84,45 @@ impl Imac {
         let arg1: i64;
         let arg2: i64;
         let dest: usize;
-        if str_op.chars().nth(2) == Some('0') {
-            arg1 = self.p[self.p[self.index+1] as usize] as i64;
-        } else {
-            arg1 = self.p[self.index+1];
+        match str_op.chars().nth(2) {
+            Some('0') => arg1 = self.p[self.p[self.index+1] as usize],
+            Some('1') => arg1 = self.p[self.index+1],
+            Some('2') => arg1 =
+                self.p[(self.rb_offset + self.p[self.index+1]) as usize],
+            _ => panic!("Unknown mode in mul arg1 at index: {}", self.index)
         }
-        if str_op.chars().nth(1) == Some('0') {
-            arg2 = self.p[self.p[self.index+2] as usize] as i64;
-        } else {
-            arg2 = self.p[self.index+2];
+        match str_op.chars().nth(1) {
+            Some('0') => arg2 = self.p[self.p[self.index+2] as usize],
+            Some('1') => arg2 = self.p[self.index+2],
+            Some('2') => arg2 =
+                self.p[(self.rb_offset + self.p[self.index+2]) as usize],
+            _ => panic!("Unknown mode in mul arg2 at index: {}", self.index)
         }
-        if str_op.chars().nth(0) == Some('0') {
-            dest = self.p[self.index+3] as usize;
-        } else {
-            panic!("Write locations can't be immediate mode. Index: {}",
+        match str_op.chars().nth(0) {
+            Some('0') => dest = self.p[self.index+3] as usize,
+            Some('1') => {
+                panic!("Write dest can't be immediate mode mul index: {}",
                 self.index);
+            },
+            Some('2') => dest =
+                (self.rb_offset + self.p[self.index+3]) as usize,
+            _ => panic!("Unknown mode in mul arg3 at index: {}", self.index)
         }
         self.p[dest] = arg1 * arg2;
         self.index += 4;
     }
-    fn iin(&mut self) {
-        let dest = self.p[self.index+1] as usize;
-        // let mut input = String::new();
-        // TODO remove this after updating for day07
-        // io::stdin().read_line(&mut input)
-        //     .expect("Failed to read in line");
-        // self.p[dest] = input.trim().parse().unwrap();
+    fn iin(&mut self, str_op: &String) {
+        let dest: usize;
+        match str_op.chars().nth(2) {
+            Some('0') => dest = self.p[self.index+1] as usize,
+            Some('1') => {
+                panic!("Write dest can't be immediate mode iin index: {}",
+                self.index);
+            },
+            Some('2') => dest =
+                (self.rb_offset + self.p[self.index+1]) as usize,
+            _ => panic!("Unknown mode in iin dest at index: {}", self.index)
+        }
         if let Some(i) = self.in_q.pop_front() {
             self.p[dest] =  i;
             self.index += 2;
@@ -108,51 +132,59 @@ impl Imac {
     }
     fn iout(&mut self, str_op: &String) {
         let arg1: i64;
-        if str_op.chars().nth(2) == Some('0') {
-            arg1 = self.p[self.p[self.index+1] as usize] as i64;
-        } else {
-            arg1 = self.p[self.index+1];
+        match str_op.chars().nth(2) {
+            Some('0') => arg1 = self.p[self.p[self.index+1] as usize],
+            Some('1') => arg1 = self.p[self.index+1],
+            Some('2') => arg1 =
+                self.p[(self.rb_offset + self.p[self.index+1]) as usize],
+            _ => panic!("Unknown mode in iout arg1 at index: {}", self.index)
         }
         self.index += 2;
-        // TODO remove this after updating for day07
-        // format!("{}", arg1)
         self.out_q.push_back(arg1);
     }
     fn jit(&mut self, str_op: &String) {
         let arg1: i64;
         let arg2: i64;
-        if str_op.chars().nth(2) == Some('0') {
-            arg1 = self.p[self.p[self.index+1] as usize] as i64;
-        } else {
-            arg1 = self.p[self.index+1];
+        match str_op.chars().nth(2) {
+            Some('0') => arg1 = self.p[self.p[self.index+1] as usize],
+            Some('1') => arg1 = self.p[self.index+1],
+            Some('2') => arg1 =
+                self.p[(self.rb_offset + self.p[self.index+1]) as usize],
+            _ => panic!("Unknown mode in jit arg1 at index: {}", self.index)
         }
         if arg1 == 0 {
             self.index += 3;
             return
         }
-        if str_op.chars().nth(1) == Some('0') {
-            arg2 = self.p[self.p[self.index+2] as usize] as i64;
-        } else {
-            arg2 = self.p[self.index+2];
+        match str_op.chars().nth(1) {
+            Some('0') => arg2 = self.p[self.p[self.index+2] as usize],
+            Some('1') => arg2 = self.p[self.index+2],
+            Some('2') => arg2 =
+                self.p[(self.rb_offset + self.p[self.index+2]) as usize],
+            _ => panic!("Unknown mode in jit arg2 at index: {}", self.index)
         }
         self.index = arg2 as usize;
     }
     fn jif(&mut self, str_op: &String) {
         let arg1: i64;
         let arg2: i64;
-        if str_op.chars().nth(2) == Some('0') {
-            arg1 = self.p[self.p[self.index+1] as usize] as i64;
-        } else {
-            arg1 = self.p[self.index+1];
+        match str_op.chars().nth(2) {
+            Some('0') => arg1 = self.p[self.p[self.index+1] as usize],
+            Some('1') => arg1 = self.p[self.index+1],
+            Some('2') => arg1 =
+                self.p[(self.rb_offset + self.p[self.index+1]) as usize],
+            _ => panic!("Unknown mode in jif arg1 at index: {}", self.index)
         }
         if arg1 != 0 {
             self.index += 3;
             return
         }
-        if str_op.chars().nth(1) == Some('0') {
-            arg2 = self.p[self.p[self.index+2] as usize] as i64;
-        } else {
-            arg2 = self.p[self.index+2];
+        match str_op.chars().nth(1) {
+            Some('0') => arg2 = self.p[self.p[self.index+2] as usize],
+            Some('1') => arg2 = self.p[self.index+2],
+            Some('2') => arg2 =
+                self.p[(self.rb_offset + self.p[self.index+2]) as usize],
+            _ => panic!("Unknown mode in jif arg2 at index: {}", self.index)
         }
         self.index = arg2 as usize;
     }
@@ -160,21 +192,29 @@ impl Imac {
         let arg1: i64;
         let arg2: i64;
         let dest: usize;
-        if str_op.chars().nth(2) == Some('0') {
-            arg1 = self.p[self.p[self.index+1] as usize] as i64;
-        } else {
-            arg1 = self.p[self.index+1];
+        match str_op.chars().nth(2) {
+            Some('0') => arg1 = self.p[self.p[self.index+1] as usize],
+            Some('1') => arg1 = self.p[self.index+1],
+            Some('2') => arg1 =
+                self.p[(self.rb_offset + self.p[self.index+1]) as usize],
+            _ => panic!("Unknown mode in lt arg1 at index: {}", self.index)
         }
-        if str_op.chars().nth(1) == Some('0') {
-            arg2 = self.p[self.p[self.index+2] as usize] as i64;
-        } else {
-            arg2 = self.p[self.index+2];
+        match str_op.chars().nth(1) {
+            Some('0') => arg2 = self.p[self.p[self.index+2] as usize],
+            Some('1') => arg2 = self.p[self.index+2],
+            Some('2') => arg2 =
+                self.p[(self.rb_offset + self.p[self.index+2]) as usize],
+            _ => panic!("Unknown mode in lt arg2 at index: {}", self.index)
         }
-        if str_op.chars().nth(0) == Some('0') {
-            dest = self.p[self.index+3] as usize;
-        } else {
-            panic!("Write locations can't be immediate mode. Index: {}",
+        match str_op.chars().nth(0) {
+            Some('0') => dest = self.p[self.index+3] as usize,
+            Some('1') => {
+                panic!("Write dest can't be immediate mode. Index: {}",
                 self.index);
+            },
+            Some('2') => dest =
+                (self.rb_offset + self.p[self.index+3]) as usize,
+            _ => panic!("Unknown mode in lt arg3 at index: {}", self.index)
         }
         if arg1 < arg2 {
             self.p[dest] = 1;
@@ -187,21 +227,29 @@ impl Imac {
         let arg1: i64;
         let arg2: i64;
         let dest: usize;
-        if str_op.chars().nth(2) == Some('0') {
-            arg1 = self.p[self.p[self.index+1] as usize] as i64;
-        } else {
-            arg1 = self.p[self.index+1];
+        match str_op.chars().nth(2) {
+            Some('0') => arg1 = self.p[self.p[self.index+1] as usize],
+            Some('1') => arg1 = self.p[self.index+1],
+            Some('2') => arg1 =
+                self.p[(self.rb_offset + self.p[self.index+1]) as usize],
+            _ => panic!("Unknown mode in eq arg1 at index: {}", self.index)
         }
-        if str_op.chars().nth(1) == Some('0') {
-            arg2 = self.p[self.p[self.index+2] as usize] as i64;
-        } else {
-            arg2 = self.p[self.index+2];
+        match str_op.chars().nth(1) {
+            Some('0') => arg2 = self.p[self.p[self.index+2] as usize],
+            Some('1') => arg2 = self.p[self.index+2],
+            Some('2') => arg2 =
+                self.p[(self.rb_offset + self.p[self.index+2]) as usize],
+            _ => panic!("Unknown mode in eq arg2 at index: {}", self.index)
         }
-        if str_op.chars().nth(0) == Some('0') {
-            dest = self.p[self.index+3] as usize;
-        } else {
-            panic!("Write locations can't be immediate mode. Index: {}",
+        match str_op.chars().nth(0) {
+            Some('0') => dest = self.p[self.index+3] as usize,
+            Some('1') => {
+                panic!("Write dest can't be immediate mode. Index: {}",
                 self.index);
+            },
+            Some('2') => dest =
+                (self.rb_offset + self.p[self.index+3]) as usize,
+            _ => panic!("Unknown mode in eq arg3 at index: {}", self.index)
         }
         if arg1 == arg2 {
             self.p[dest] = 1;
@@ -209,6 +257,16 @@ impl Imac {
             self.p[dest] = 0;
         }
         self.index += 4;
+    }
+    fn rbo(&mut self, str_op: &String) {
+        match str_op.chars().nth(2) {
+            Some('0') => self.rb_offset += self.p[self.p[self.index+1] as usize],
+            Some('1') => self.rb_offset += self.p[self.index+1],
+            Some('2') => self.rb_offset +=
+                self.p[(self.rb_offset + self.p[self.index+1]) as usize],
+            _ => panic!("Unknown mode in rbo at index: {}", self.index)
+        }
+        self.index += 2;
     }
 
     pub fn run(&mut self) {
@@ -220,12 +278,13 @@ impl Imac {
                 99 => self.state = State::Ended,
                 1 => self.add(&str_op),
                 2 => self.mul(&str_op),
-                3 => self.iin(),
+                3 => self.iin(&str_op),
                 4 => self.iout(&str_op),
                 5 => self.jit(&str_op),
                 6 => self.jif(&str_op),
                 7 => self.lt(&str_op),
                 8 => self.eq(&str_op),
+                9 => self.rbo(&str_op),
                 _ => { self.state = State::Ended;
                     println!("Error: Unknown operator {}", self.p[self.index]);
                     println!("       At address: {}", self.index);
@@ -255,7 +314,7 @@ mod tests {
         let mut prog = Imac::new(&p_in, 0, None);
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-1).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -277,7 +336,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-1).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -299,7 +358,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-1).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -321,7 +380,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-1).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -343,7 +402,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-1).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -366,7 +425,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-1).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -388,7 +447,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-3).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -411,7 +470,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-3).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -434,7 +493,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-1).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -457,7 +516,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-2).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -480,7 +539,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-2).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -503,7 +562,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-2).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -526,7 +585,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-2).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -549,7 +608,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-2).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -572,7 +631,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-2).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -581,6 +640,19 @@ mod tests {
             .map(|n| n.to_string()).collect::<Vec<_>>().join(",");
         let p_out = format!("{},{}", p_out, out_str);
         assert_eq!(output, p_out);
+    }
+
+    #[test]
+    fn test_rbo1() {
+        let input = "109,10,99";
+        let p_in: Vec<i64> = input.split(',')
+            .filter_map(|s| s.trim().parse::<i64>().ok())
+            .collect();
+        let mut prog = Imac::new(&p_in, 0, None);
+
+        prog.run();
+
+        assert_eq!(prog.rb_offset, 10i64);
     }
 
     #[test]
@@ -599,7 +671,7 @@ mod tests {
 
         prog.run();
 
-        let p_out = prog.p_out();
+        let p_out: String = prog.p_out().chars().take(output.len()-5).collect();
         let mut outputs: Vec<i64> = Vec::new();
         while let Some(i) = prog.read_out() {
             outputs.push(i);
@@ -608,5 +680,57 @@ mod tests {
             .map(|n| n.to_string()).collect::<Vec<_>>().join(",");
         let p_out = format!("{},{}", p_out, out_str);
         assert_eq!(output, p_out);
+    }
+
+    #[test]
+    fn test_day09() {
+        // Input should equal output for this test
+        let input = concat!("109,1,204,-1,1001,100,1,100,1008,100,16,101,",
+            "1006,101,0,99");
+        let test_q = VecDeque::from([8i64]);
+        let p_in: Vec<i64> = input.split(',')
+            .filter_map(|s| s.trim().parse::<i64>().ok())
+            .collect();
+        let mut prog = Imac::new(&p_in, 0, Some(test_q));
+
+        prog.run();
+
+        let mut outputs: Vec<i64> = Vec::new();
+        while let Some(i) = prog.read_out() {
+            outputs.push(i);
+        }
+        let out_str = outputs.iter()
+            .map(|n| n.to_string()).collect::<Vec<_>>().join(",");
+        assert_eq!(input, out_str);
+
+        let input = "1102,34915192,34915192,7,4,7,99,0";
+        let test_q = VecDeque::from([8i64]);
+        let p_in: Vec<i64> = input.split(',')
+            .filter_map(|s| s.trim().parse::<i64>().ok())
+            .collect();
+        let mut prog = Imac::new(&p_in, 0, Some(test_q));
+
+        prog.run();
+
+        let mut outputs: Vec<i64> = Vec::new();
+        while let Some(i) = prog.read_out() {
+            outputs.push(i);
+        }
+        assert_eq!(outputs[0], 1219070632396864);
+
+        let input = "104,1125899906842624,99";
+        let test_q = VecDeque::from([8i64]);
+        let p_in: Vec<i64> = input.split(',')
+            .filter_map(|s| s.trim().parse::<i64>().ok())
+            .collect();
+        let mut prog = Imac::new(&p_in, 0, Some(test_q));
+
+        prog.run();
+
+        let mut outputs: Vec<i64> = Vec::new();
+        while let Some(i) = prog.read_out() {
+            outputs.push(i);
+        }
+        assert_eq!(outputs[0], 1125899906842624);
     }
 }
