@@ -252,6 +252,11 @@ class Imac:
     def add_input(self, inputs):
         self.inputs.extend(inputs)
     
+    def get_output(self):
+        out = self.outputs.copy()
+        self.outputs.clear()
+        return(out)
+    
     OP_CODES = {
         1 : add,
         2 : mul,
