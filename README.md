@@ -11,5 +11,5 @@ After completing the "relative base" changes for all instructions and getting al
 * Day 9 (Rust): Much rewriting of both the int-code computer and the tests, but quick after that for both parts
 * Day 13 (Python): Skipping day 11 as it does not have any int-code machine updates and I was not missing stars for that one. This will start the days where I can collect missed stars. Redid part 1 and then did part 2 to collect one of the stars I missed earlier. Once I had the game set up, I tried to move the joy-stick as the ball moved. This was getting pretty full of cases and long on code. I then had the idea to just copy the machine after each successful paddle bounce and let the ball go until it met the line above the paddle line. I then would pass that back to the main machine (and dump the copy) so I would alway know where the paddle would have to be next and could go to that position directly. I checked in a copy, but will try to add an animation  
 **Update** Added the animation, but it is very hacky and slow (like, a minute)  
-[Watch the animation(on YouTube)](https://youtu.be/ZwmkmtoP39s)
+[![Watch the animation](https://img.youtube.com/vi/ZwmkmtoP39s/0.jpg)](https://youtube.com/match?ZwmkmtoP39s)
 * Day 13 (Rust): ...
