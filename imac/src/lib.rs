@@ -8,7 +8,7 @@ pub enum State {
     Waiting,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Imac {
     p: Vec<i64>,
     index: usize,
