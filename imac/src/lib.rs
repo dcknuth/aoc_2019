@@ -291,12 +291,6 @@ impl Imac {
                     },
             }
         }
-        // Remove after updating for day07
-        // let p_str = self.p.iter()
-        //     .map(|n| n.to_string()).collect::<Vec<_>>().join(",");
-        // let all_out = outputs.join(",");
-
-        // format!("{},{}", p_str, all_out)
     }
 }
 

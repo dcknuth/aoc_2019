@@ -1,24 +1,13 @@
 {
     "version": "0.2.0",
     "configurations": [
-    
-        // {
-        //     "name": "Python: Current File",
-        //     "type": "debugpy",
-        //     "request": "launch",
-        //     "program": "${file}",
-        //     "console": "integratedTerminal"
-        // },
         {
-            "name": "Rust: Debug",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceRoot}/day13/target/debug/day13.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceRoot}",
-            "environment": [],
-            "console": "integratedTerminal"
+            "name": "Debug Rust",
+            "cargo": {
+                "args": ["build", "--manifest-path", "${fileDirname}/../Cargo.toml"]
+            }
         }
     ]
 }
