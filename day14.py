@@ -31,14 +31,22 @@ def ore_equiv(name, n):
     production_step = outputs[name][name]
     inputs.remove(name)
     if len(inputs) == 1 and inputs[0] == 'ORE':
-        # TODO calc production steps needed and remainder
         steps = n // production_step
         if steps * production_step == n:
-            needed = outputs[name][inputs[0]]
-        return(n*needed, d)
+            return(outputs[name][inputs[0]]*steps, Counter())
+        else:
+            remainders = Counter()
+            remainders[inputs[0]] = outputs[name][inputs[0]]*(steps+1) - n
     if len(inputs) == 1:
-        return(ore_equiv(inputs[0], n*outputs[name][inputs[0]]))
-    # there is more than one input
+        steps = n // production_step
+        if steps * production_step == n:
+            ore, remainders = ore_equiv(inputs[0], steps*outputs[name][inputs[0]])
+            return(ore, remainders)
+        else:
+            ore, remainders = ore_equiv(inputs[0], (steps+1)*outputs[name][inputs[0]])
+            remainders[inputs[0]] += outputs[name][inputs[0]]*(steps+1) - n
+            return(ore, remainders)
+    # TODO here: there is more than one input
     in_pairs = ((k, v) for k, v in outputs[name].items() if k != name)
     # TODO need a way to collect both values vvvv
     return(n*sum(map(ore_equiv, in_pairs)), d)
