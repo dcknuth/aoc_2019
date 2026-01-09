@@ -1,7 +1,11 @@
 from collections import defaultdict, Counter
-from functools import cache
 
-filename = "test14.txt"
+#filename = "test14.txt"
+#filename = "test14-2.txt"
+#filename = "test14-3.txt"
+#filename = "test14-4.txt"
+#filename = "test14-5.txt"
+filename = "input14.txt"
 
 with open(filename) as f:
     ls = f.read().strip().split('\n')
@@ -22,34 +26,53 @@ for l in ls:
         q, name = i.split()
         q = int(q)
         outputs[out_name][name] = q
+# add an identity case for ORE
+outputs['ORE'] = {'ORE':1}
 
-@cache
-def ore_equiv(name, n):
-    ''' Name of the item you want and n is the quantity needed.
-    Returns the amount of ORE needed and a Counter of the left over items'''
-    inputs = list(outputs[name].keys())
-    production_step = outputs[name][name]
-    inputs.remove(name)
-    if len(inputs) == 1 and inputs[0] == 'ORE':
-        steps = n // production_step
-        if steps * production_step == n:
-            return(outputs[name][inputs[0]]*steps, Counter())
+def expand_level(items, remainders):
+    '''Items dict and remainders of items
+    We expand breadth-first a set of items at a time
+    Return the amounts of everything needed as a dict including remainders
+    so it works for part 2'''
+    new_items = Counter()
+    for item in items.keys():
+        if item == 'ORE':
+            new_items['ORE'] += items['ORE']
         else:
-            remainders = Counter()
-            remainders[inputs[0]] = outputs[name][inputs[0]]*(steps+1) - n
-    if len(inputs) == 1:
-        steps = n // production_step
-        if steps * production_step == n:
-            ore, remainders = ore_equiv(inputs[0], steps*outputs[name][inputs[0]])
-            return(ore, remainders)
-        else:
-            ore, remainders = ore_equiv(inputs[0], (steps+1)*outputs[name][inputs[0]])
-            remainders[inputs[0]] += outputs[name][inputs[0]]*(steps+1) - n
-            return(ore, remainders)
-    # TODO here: there is more than one input
-    in_pairs = ((k, v) for k, v in outputs[name].items() if k != name)
-    # TODO need a way to collect both values vvvv
-    return(n*sum(map(ore_equiv, in_pairs)), d)
+            if remainders[item] >= items[item]:
+                remainders[item] -= items[item]
+                continue
+            item_need = items[item] - remainders[item]
+            remainders[item] = 0
+            production_step = outputs[item][item]
+            pairs = ((k, v) for k, v in outputs[item].items() if k != item)
+            steps = item_need // production_step
+            if steps * production_step < item_need:
+                steps += 1
+            for sub_item, sub_need in pairs:
+                new_need = steps * sub_need
+                new_need -= remainders[sub_need]
+                new_items[sub_item] += new_need
+            remainders[item] += steps * production_step - item_need
+    return(new_items, remainders)
 
-ans_p1 = ore_equiv('FUEL', 1)
-print(f"Part one is {ans_p1}")
+items = Counter({'FUEL':1})
+remainders = Counter()
+while True:
+    items, remainders = expand_level(items, remainders)
+    if len(items) == 1 and next(iter(items)) == 'ORE':
+        break
+print(f"Part one is {items['ORE']}")
+
+fuel = 1
+while items['ORE'] < 1000000000000:
+    items['FUEL'] = 1
+    while True:
+        items, remainders = expand_level(items, remainders)
+        if len(items) == 1 and next(iter(items)) == 'ORE':
+            break
+    if items['ORE'] < 1000000000000:
+        fuel += 1
+    # if fuel % 10000 == 0:
+    #     print(fuel)
+print(f"Part two, max fuel is {fuel}")
