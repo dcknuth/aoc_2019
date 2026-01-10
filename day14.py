@@ -30,7 +30,7 @@ for l in ls:
 outputs['ORE'] = {'ORE':1}
 
 def expand_level(items, remainders):
-    '''Items dict and remainders of items
+    '''Items frozenset and remainders of items (so it's hashable)
     We expand breadth-first a set of items at a time
     Return the amounts of everything needed as a dict including remainders
     so it works for part 2'''
@@ -56,23 +56,37 @@ def expand_level(items, remainders):
             remainders[item] += steps * production_step - item_need
     return(new_items, remainders)
 
-items = Counter({'FUEL':1})
+items = Counter({'FUEL': 1})
 remainders = Counter()
 while True:
     items, remainders = expand_level(items, remainders)
-    if len(items) == 1 and next(iter(items)) == 'ORE':
+    if len(items) == 1 and next(iter(items.keys())) == 'ORE':
         break
 print(f"Part one is {items['ORE']}")
 
+# limited cache
+my_cache = dict()
+my_cache[frozenset(dict())] = [items['ORE'], remainders]
 fuel = 1
-while items['ORE'] < 1000000000000:
-    items['FUEL'] = 1
+ore_total = items['ORE']
+while ore_total < 1000000000000:
+    items = Counter({'FUEL': 1})
+    hashable = frozenset(remainders.items())
+    if hashable in my_cache:
+        print("cache hit!")
+        ore, remainders = my_cache[hashable]
+        ore_total += ore
+        if ore_total < 1000000000000:
+            fuel += 1
+        continue
     while True:
         items, remainders = expand_level(items, remainders)
-        if len(items) == 1 and next(iter(items)) == 'ORE':
+        if len(items) == 1 and next(iter(items.keys())) == 'ORE':
             break
-    if items['ORE'] < 1000000000000:
+    my_cache[hashable] = [items['ORE'], remainders]
+    ore_total += items['ORE']
+    if ore_total < 1000000000000:
         fuel += 1
-    # if fuel % 10000 == 0:
-    #     print(fuel)
+    if fuel % 100000 == 0:
+        print(fuel)
 print(f"Part two, max fuel is {fuel}")
