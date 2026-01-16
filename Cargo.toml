@@ -1,7 +1,0 @@
-[workspace]
-members = [
-    "day13", "day14",
-    # add more days here
-]
-
-resolver = "3"

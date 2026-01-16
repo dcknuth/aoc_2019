@@ -72,7 +72,58 @@ pub fn part1(s: &String) -> u64 {
     total_ore
 }
 
+pub fn part2(s: &String) -> u64 {
+    let mut remainders = HashMap::new();
+    let mut total_ore = 0;
+    let mut fuel_produced = 0;
+    let ct = parse_input(s);
+    
 
+    while total_ore < 1000000000000 {
+        let mut l = HashMap::from([("FUEL", 1)]);
+        loop {
+            if l.len() == 1 && *l.keys().next().unwrap() == "ORE" {
+                break
+            }
+            l = expand_level(l, &ct, &mut remainders);
+        }
+        fuel_produced += 1;
+        total_ore += l.get("ORE").unwrap();
+    }
+    fuel_produced -= 1;
+
+    fuel_produced
+}
+
+pub fn part2_bs(s: &String) -> u64 {
+    let mut remainders = HashMap::new();
+    let mut fuel_min: u64 = 1;
+    let mut fuel_max: u64 = 10000000;
+    let ct = parse_input(s);
+    
+
+    while fuel_min != fuel_max {
+        let cur_fuel: u64 = fuel_min.midpoint(fuel_max);
+        if cur_fuel == fuel_min {
+            break
+        }
+        let mut l = HashMap::from([("FUEL", cur_fuel)]);
+        loop {
+            if l.len() == 1 && *l.keys().next().unwrap() == "ORE" {
+                break
+            }
+            l = expand_level(l, &ct, &mut remainders);
+        }
+        let cur_ore = l.get("ORE").unwrap();
+        if *cur_ore < 1000000000000u64 {
+            fuel_min = cur_fuel;
+        } else {
+            fuel_max = cur_fuel;
+        }
+    }
+
+    fuel_min
+}
 
 #[cfg(test)]
 mod tests {
