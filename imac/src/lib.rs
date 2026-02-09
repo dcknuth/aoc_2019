@@ -41,6 +41,9 @@ impl Imac {
     pub fn get_idx(&self, i: usize) -> i64 {
         self.p[i]
     }
+    pub fn set_idx(&mut self, i: usize, n: i64) {
+        self.p[i] = n;
+    }
     pub fn p_out(&self) -> String {
         self.p.iter()
             .map(|n| n.to_string()).collect::<Vec<_>>().join(",")

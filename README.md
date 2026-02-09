@@ -24,4 +24,5 @@ Going to try a different approach. There is an obvious path of just keep going s
 OK, back to the fact that my input has too many options to just manually walk it through. New attempt will be to load into NetworkX all the options where there is a mandatory or optional turn. Then I will have that give all paths not longer than the requirement lengths would allow. Then look for three sub-sets in each that would match everything (or go back to the original effort without the A,B,C assumption)  
 Turns out I should have stuck with the "go forward until you have to turn" and just tried a shorter A program with manual assembly of each part. This worked... eventually.
 Again, not going to clean up the Python. Just going to take my many things learned to the Rust solution.
-* Day 17 (Rust) ...
+* Day 17 (Rust) The part 2 function is a little long and not as DRY as it could be. However, I did a programmatic search for the part 2 answer here instead of just feeding in the manual one. I didn't time it, but seemed sub-second in debug. Learned a way to shift to ASCII in Rust. You can say b'A' to get the byte version of A which is its ASCII encoding
+* Day 19 (Python) ...
