@@ -239,8 +239,8 @@ class Imac:
     def __init__(self, pg, i, inputs):
         self.pg = pg.copy()
         # add working memory to the end of the program with 0s
-        #  guessing 1M is enough
-        self.pg += [0] * 1000000
+        #  guessing 10K is enough
+        self.pg += [0] * 10000
         self.i = i
         self.relative_base = 0
         self.inputs = inputs.copy()
