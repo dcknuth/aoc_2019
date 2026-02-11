@@ -51,6 +51,9 @@ impl Imac {
     pub fn get_state(&self) -> State {
         self.state
     }
+    pub fn set_ex_ptr(&mut self, n: usize) {
+        self.index = n;
+    }
 
     fn add(&mut self, str_op: &String) {
         let arg1: i64;
