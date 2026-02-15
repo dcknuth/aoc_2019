@@ -3,7 +3,12 @@ filename = "input22.txt"
 #filename = "test_d22-2.txt"
 #filename = "test_d22-3.txt"
 #filename = "test_d22-4.txt"
+#filename = "test_d22-5.txt"
+#filename = "test_d22-6.txt"
+#filename = "test_d22-7.txt"
+#filename = "test_d22-9.txt"
 N = 10007 # number of cards
+#N = 10
 
 with open(filename) as f:
     ls = f.read().strip().split('\n')
@@ -36,13 +41,42 @@ for shuffle in ls:
 print(cards.index(2019))
 
 # part 2
-# first let's print what ended up in index 2020 for part 1
-print(f"card in slot 2020 is {cards[2020]}")
-# so we will need a way to come up with that given only the index
-# TODO
-# then we will need to track what lands there over time with the full deck
-#  and hope for a repeating value
-# TODO
-# Then calculate the tail left after a repeat and look up what lands at the index
-# TODO
+# Read the readme for this day to see where this comes from
+def shuffle(i, N, ls):
+    a, b = 1, 0
+    for s in ls:
+        if 'new stack' in s:
+            i = N - 1 - i
+            a *= -1
+            b = N - 1 - b
+        elif 'cut ' in s:
+            cut_n = s.split()
+            cut_n = int(cut_n[1])
+            i = (i - cut_n) % N
+            b -= cut_n
+        elif 'with increment' in s:
+            inc = s.split()
+            inc = int(inc[3])
+            i = (i * inc) % N
+            a *= inc
+            b *= inc
+        else:
+            print("Unknown shuffle type")
+    return(i, a % N, b % N)
 
+# redo part 1 to make sure this is still working for that
+card, a, b = shuffle(2019, N, ls)
+print(card)
+
+# change for part 2
+N = 119315717514047
+times = 101741582076661
+
+def big_shuffle(position_needed, N, times, ls):
+    _, c, d = shuffle(position_needed, N, ls)
+    a, b = pow(c, -1, N), (-d * pow(c, -1, N)) % N
+    p1 = pow(a, times, N)
+    p2 = (p1 - 1) * pow(a - 1, N - 2, N)
+    return (( p1 * position_needed ) + ( b * p2 )) % N
+
+print(big_shuffle(2020, N, times, ls))
