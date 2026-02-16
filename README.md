@@ -40,4 +40,5 @@ def deal_with_increment(N, x, p):
 ```
 Looking ahead to the part 1 implementation, p is the number of cards in your deck, x is the original index of the desired card and N is the manipulation that you are doing. So in "deal with increment 3", N is 3. OK I get this part 1  
 Looking at the part 2 it has modified the shuffling function to not use the sub-functions. It adds a function to update a and b variables for each instruction and then returns the modulus of the number of cards for each. It says we have f(x) = ax + b which I don't exactly see [here](https://en.wikipedia.org/wiki/Modular_multiplicative_inverse), but maybe it's close enough. Then it gives a reverse function that shows inverses of the modulus that don't look too far from what was about half way down the Wiki page. I have to say that I have a bit of trouble following how that all works. It does work after pushing this approach back into my code and input
-* Day 22 (Rust) This will be just a translation between programming languages again ...
+* Day 22 (Rust) This will be just a translation between programming languages again. Well, part 1 is done and has turned into learning how to use very large numbers with Rust. There is a package for that, but impressive that it outran an i128.  
+Part 2 ...
