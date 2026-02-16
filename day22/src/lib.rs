@@ -40,3 +40,25 @@ fn shuffle(moves: Vec<&str>, mut idx: i64, deck_len: i64) -> (i64, i64, i64) {
     (idx, a.rem_euclid(&BigInt::from(deck_len)).to_i64().unwrap(),
     b.rem_euclid(&BigInt::from(deck_len)).to_i64().unwrap())
 }
+
+pub fn part2(s: &String) -> i64 {
+    let deck_len = 119315717514047;
+    let times: i64 = 101741582076661;
+    let mut moves: Vec<&str> = s.split('\n').collect();
+    // get rid of the empty at the end
+    moves.pop();
+
+    let (_card, c, d) = shuffle(moves,
+        2020, deck_len);
+    let base = BigInt::from(c);
+    let modulus = BigInt::from(deck_len);
+    // will only work if coprime and is exp -1
+    let a = base.modinv(&modulus).unwrap();
+    let b = (-d * base.modinv(&modulus).unwrap()).rem_euclid(&modulus);
+    let big_times = BigInt::from(times);
+    let p1 = a.modpow(&big_times, &modulus);
+    let p2 = (&p1 - 1) * ((a-1) as BigInt).modpow(&(&modulus - 2), &modulus);
+    
+    (((p1 as BigInt * BigInt::from(2020)) as BigInt +
+    (b as BigInt * p2)) as BigInt).rem_euclid(&modulus).to_i64().unwrap()
+}
