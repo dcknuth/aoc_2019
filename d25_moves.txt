@@ -1,0 +1,25 @@
+s
+pu fixed point
+w
+w
+pu spool of cat6
+w
+pu monolith
+a
+pu planetoid
+d
+w
+pu hypercube
+s
+s
+d
+w
+pu candy cane
+s
+d
+pu easter egg
+d
+s
+pu ornament
+a
+s
